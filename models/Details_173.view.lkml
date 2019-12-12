@@ -17,13 +17,18 @@
        drv.no_convictions,
        drv.no_oth_vehicles_driven,
        mi.rct_mi_15 AS risk_attitude,
-      AVG(quotedpremium_ap_notinclipt) AS avg_quoted_premium,
+       CASE
+         WHEN sal.insurer_quote_ref IS NULL THEN 0
+         ELSE 1
+       END AS sale_flag,
+       AVG(quotedpremium_ap_notinclipt) AS avg_quoted_premium,
        MIN(drv.quote_dttm) AS quote_dttm
 FROM qs_drivers drv
   LEFT JOIN qs_mi_outputs mi ON drv.quote_id = mi.quote_id
   LEFT JOIN qs_vehicles veh ON drv.quote_id = veh.quote_id
   LEFT JOIN qs_cover cov ON drv.quote_id = cov.quote_id
   LEFT JOIN abi_occupation occ ON drv.main_occupation = occ.abi_code
+  LEFT JOIN hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36)
 WHERE drv.driver_id = '0'
 AND   rct_mi_13 = '173'
 AND   cov.rct_noquote_an = 0
@@ -43,7 +48,13 @@ GROUP BY drv.forename,
          drv.no_claims,
          drv.no_convictions,
          drv.no_oth_vehicles_driven,
-         mi.rct_mi_15;;
+         mi.rct_mi_15,
+         CASE
+           WHEN sal.insurer_quote_ref IS NULL THEN 0
+           ELSE 1
+         END
+
+;;
    }
 
  dimension: forename {
@@ -126,9 +137,14 @@ GROUP BY drv.forename,
     sql: ${TABLE}.risk_attitude ;;
   }
   dimension: av_quoted_premium {
-    description: "Risk attitude factor"
+    description: "Average quoted premium"
     type: number
     sql: ${TABLE}.avg_quoted_premium ;;
+  }
+  dimension: sale_flag {
+    description: "indicator of sale on quote"
+    type: number
+    sql: ${TABLE}.sale_flag ;;
   }
 }
 #   measure: total_lifetime_orders {

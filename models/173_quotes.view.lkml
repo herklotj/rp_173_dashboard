@@ -59,17 +59,7 @@ FROM qs_cover cov
          ON cov.quote_id = drv.quote_id
         AND drv.driver_id = '0'
   LEFT JOIN qs_vehicles veh ON cov.quote_id = veh.quote_id
-  LEFT JOIN (SELECT engine_size,
-                    manufacturer,
-                    model,
-                    abi_code,
-                    power_bhp
-             FROM vl_vehicle_data_plus
-             GROUP BY engine_size,
-                      manufacturer,
-                      model,
-                      power_bhp,
-                      abi_code) vl ON veh.abi_code = vl.abi_code
+  LEFT JOIN vl_vehicle_data vl ON veh.abi_code = vl.abi_code
   LEFT JOIN v_model_abi_code mod ON vl.abi_code = mod.abi_code
   LEFT JOIN postcode_geography geo ON UPPER(replace(cov.risk_postcode, ' ','')) = UPPER(geo.postcode)
 WHERE rct_mi_13 = '173'

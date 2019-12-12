@@ -139,7 +139,7 @@ FROM actian.v_rpt_daily_br_173;;
   }
 
 
-  dimension: dummy_br {
+  dimension: business_rule {
 
     case: {
       when: {
