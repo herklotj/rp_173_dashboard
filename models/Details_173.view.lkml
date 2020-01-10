@@ -75,6 +75,12 @@ GROUP BY drv.forename,
    timeframes: [date, week, month, year]
    sql: ${TABLE}.birth_dt ;;
  }
+  dimension_group: quote {
+    description: "Quote date"
+    type: time
+    timeframes: [date, week, month, year]
+    sql: ${TABLE}.quote_dttm ;;
+  }
   dimension: ncd {
     description: "PH's NCD"
     type: number
