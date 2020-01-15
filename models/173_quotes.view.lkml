@@ -51,7 +51,8 @@
        power_bhp,
        mod.model,
        engine_size,
-       geo.postcode_area
+       geo.postcode_area,
+       drv.gender
 FROM qs_cover cov
   LEFT JOIN qs_mi_outputs mi ON cov.quote_id = mi.quote_id
   LEFT JOIN qs_radar_return rad ON cov.quote_id = rad.quote_id
@@ -142,6 +143,11 @@ WHERE rct_mi_13 = '173'
   dimension: risk_attitude {
     type: string
     sql: ${TABLE}.risk_attitude_banded;;}
+
+  dimension: driver_gender {
+    type: string
+    sql: gender ;;
+  }
 
    measure: quotes {
      type: count_distinct
