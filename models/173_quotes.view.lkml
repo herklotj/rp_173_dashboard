@@ -55,9 +55,11 @@
        drv.gender
 FROM (  select *
         from
-          qs_cover where to_date(quote_dttm) - to_date(sysdate) <= 60
+          qs_cover c
+        INNER JOIN qs_mi_outputs mi
+        ON c.quote_id = mi.quote_id and mi.rct_mi_13 = '173'
+        and to_date(c.quote_dttm) - to_date(sysdate) <= 60
       )cov
-  LEFT JOIN qs_mi_outputs mi ON cov.quote_id = mi.quote_id
   LEFT JOIN qs_radar_return rad ON cov.quote_id = rad.quote_id
   LEFT JOIN qs_drivers drv
          ON cov.quote_id = drv.quote_id
@@ -66,7 +68,6 @@ FROM (  select *
   LEFT JOIN vl_vehicle_data vl ON veh.abi_code = vl.abi_code
   LEFT JOIN v_model_abi_code mod ON vl.abi_code = mod.abi_code
   LEFT JOIN postcode_geography geo ON UPPER(replace(cov.risk_postcode, ' ','')) = UPPER(geo.postcode)
-WHERE rct_mi_13 = '173'
 ;;
    }
 
