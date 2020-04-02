@@ -60,11 +60,11 @@ FROM (  select *
         ON c.quote_id = mi.quote_id and mi.rct_mi_13 = '173'
         and to_date(c.quote_dttm) - to_date(sysdate) <= 60
       )cov
-  LEFT JOIN qs_radar_return rad ON cov.quote_id = rad.quote_id
-  LEFT JOIN qs_drivers drv
+  LEFT JOIN (select * from qs_radar_return where to_date(quote_dttm) - to_date(sysdate) <= 60) rad ON cov.quote_id = rad.quote_id
+  LEFT JOIN (select * from qs_drivers where to_date(quote_dttm) - to_date(sysdate) <= 60) drv
          ON cov.quote_id = drv.quote_id
         AND drv.driver_id = '0'
-  LEFT JOIN qs_vehicles veh ON cov.quote_id = veh.quote_id
+  LEFT JOIN (select * from qs_vehicles where to_date(quote_dttm) - to_date(sysdate) <= 60) veh ON cov.quote_id = veh.quote_id
   LEFT JOIN vl_vehicle_data vl ON veh.abi_code = vl.abi_code
   LEFT JOIN v_model_abi_code mod ON vl.abi_code = mod.abi_code
   LEFT JOIN postcode_geography geo ON UPPER(replace(cov.risk_postcode, ' ','')) = UPPER(geo.postcode)
