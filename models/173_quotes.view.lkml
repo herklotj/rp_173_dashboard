@@ -44,6 +44,21 @@
          WHEN rct_mi_15 >= 0.95 AND rct_mi_15 <= 1 THEN '0.95-1'
          ELSE '-1'
        END AS risk_attitude_banded,
+      CASE
+        WHEN rct_mi_16 >=0     and rct_mi_16 < 0.005 then '0-0.005'
+        WHEN rct_mi_16 >=0.005 and rct_mi_16 < 0.010 then '0.005-0.010'
+        WHEN rct_mi_16 >=0.010 and rct_mi_16 < 0.015 then '0.010-0.015'
+        WHEN rct_mi_16 >=0.015 and rct_mi_16 < 0.020 then '0.015-0.020'
+        WHEN rct_mi_16 >=0.020 and rct_mi_16 < 0.025 then '0.020-0.025'
+        WHEN rct_mi_16 >=0.025 and rct_mi_16 < 0.030 then '0.025-0.030'
+        WHEN rct_mi_16 >=0.030 and rct_mi_16 < 0.035 then '0.030-0.035'
+        WHEN rct_mi_16 >=0.035 and rct_mi_16 < 0.040 then '0.035-0.040'
+        WHEN rct_mi_16 >=0.040 and rct_mi_16 < 0.045 then '0.040-0.045'
+        WHEN rct_mi_16 >=0.045 and rct_mi_16 < 0.050 then '0.045-0.050'
+        WHEN rct_mi_16 >=0.050 and rct_mi_16 < 0.055 then '0.050-0.055'
+        WHEN rct_mi_16 >=0.050  then '0.050+'
+      END AS tp_freq_br,
+
        rct_mi_15 AS risk_attitude,
        drv.ncb_years,
        veh.vehicle_make,
@@ -147,6 +162,10 @@ FROM (  select *
   dimension: risk_attitude {
     type: string
     sql: ${TABLE}.risk_attitude_banded;;}
+
+  dimension: tp_freq_br {
+    type: string
+    sql: ${TABLE}.tp_freq_br;;}
 
   dimension: driver_gender {
     type: string
