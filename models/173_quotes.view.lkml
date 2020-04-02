@@ -53,7 +53,10 @@
        engine_size,
        geo.postcode_area,
        drv.gender
-FROM qs_cover cov
+FROM (  select *
+        from
+          qs_cover where to_date(quote_dttm) - to_date(sysdate) <= 60
+      )cov
   LEFT JOIN qs_mi_outputs mi ON cov.quote_id = mi.quote_id
   LEFT JOIN qs_radar_return rad ON cov.quote_id = rad.quote_id
   LEFT JOIN qs_drivers drv
