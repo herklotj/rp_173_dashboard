@@ -5,7 +5,7 @@ include: "*.view"
 
 datagroup: 173_dashboard_default_datagroup {
   # sql_trigger: SELECT MAX(id) FROM etl_log;;
-  max_cache_age: "1 hour"
+  max_cache_age: "24 hours"
 }
 
 persist_with: 173_dashboard_default_datagroup
