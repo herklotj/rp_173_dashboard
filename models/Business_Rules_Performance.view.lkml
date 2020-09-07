@@ -85,7 +85,7 @@ view: business_rules_performance {
        rct_br75_vehicle_compatible_smart,
        rct_br76_risk_attitude,
        rct_br77_tp_freq
-FROM actian.v_rpt_daily_br_173;;
+FROM aapricing.v_rpt_daily_br_173;;
   }
 
   # Define your dimensions and measures here, like this:
