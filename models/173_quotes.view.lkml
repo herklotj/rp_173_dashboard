@@ -67,22 +67,47 @@
        mod.model,
        engine_size,
        geo.postcode_area,
-       drv.gender
+       drv.gender,
+       case when ins.Insight_Match_type is null then 'Never Member' else ins.Insight_Match_type end as Insight_Match_type
 FROM (  select *
+
         from
           qs_cover c
         INNER JOIN qs_mi_outputs mi
         ON c.quote_id = mi.quote_id and mi.rct_mi_13 = '173'
-        and to_date(c.quote_dttm) - to_date(sysdate) <= 30
+        and to_date(sysdate) - to_date(c.quote_dttm)  <= 30
       )cov
-  LEFT JOIN (select * from qs_radar_return where to_date(quote_dttm) - to_date(sysdate) <= 30) rad ON cov.quote_id = rad.quote_id
-  LEFT JOIN (select * from qs_drivers where to_date(quote_dttm) - to_date(sysdate) <= 30) drv
+  LEFT JOIN (select * from qs_radar_return where  to_date(sysdate) - to_date(quote_dttm) <= 30) rad ON cov.quote_id = rad.quote_id
+  LEFT JOIN (select * from qs_drivers where to_date(sysdate) - to_date(quote_dttm) <= 30) drv
          ON cov.quote_id = drv.quote_id
         AND drv.driver_id = '0'
-  LEFT JOIN (select * from qs_vehicles where to_date(quote_dttm) - to_date(sysdate) <= 30) veh ON cov.quote_id = veh.quote_id
+  LEFT JOIN (select * from qs_vehicles where  to_date(sysdate) - to_date(quote_dttm) <= 30) veh ON cov.quote_id = veh.quote_id
   LEFT JOIN vl_vehicle_data vl ON veh.abi_code = vl.abi_code
   LEFT JOIN v_model_abi_code mod ON vl.abi_code = mod.abi_code
   LEFT JOIN postcode_geography geo ON UPPER(replace(cov.risk_postcode, ' ','')) = UPPER(geo.postcode)
+
+  left join
+    (select
+      *
+      ,case when live_member = 'Y' and aa_score_22sep2015 < 1.1 then 'Member'
+              when live_member = 'N' and aa_score_22sep2015 < 1.1 and aa_score_22sep2015 > 0 and tenure_current > 0 then 'Ex-Member'
+              when Live_member = 'N'
+                   and (HOME_HISTORY = 'C' or HOME_HISTORY = 'X')
+                   /*and aa_score_22sep2015 < 1.1*/ then 'Home'
+              else 'Unacceptable' end as acceptance
+      ,case when live_member = 'Y' then 'Member'
+              when live_member = 'N' and aa_score_22sep2015 > 0 and tenure_current > 0 then 'Ex-Member'
+              when Live_member = 'N'
+                   and (HOME_HISTORY = 'C' or HOME_HISTORY = 'X')
+                   then 'Home'
+              else 'No Match' end as Insight_Match_type
+      ,1 as current_match
+     from
+        insight
+     )ins
+    on  left(ins.qas_premise_id,8) = cov.qqas1_address_key1
+    and upper(squeeze(concat(left(replace(replace(replace(drv.surname,' ',''),'''',''),'-',''),5),'_',left(replace(drv.forename,' ',''),1)))) = ins.ck_suffix
+    and ins.Insight_match_type <> 'No Match'
 ;;
    }
 
@@ -172,6 +197,11 @@ FROM (  select *
     sql: gender ;;
   }
 
+  dimension: member_match {
+    type: string
+    sql: Insight_Match_type;;
+  }
+
    measure: quotes {
      type: count_distinct
      sql: ${TABLE}.quote_id ;;
@@ -188,4 +218,10 @@ FROM (  select *
     type: average
     sql: ${TABLE}.risk_attitude ;;
   }
+
+  measure: sales_predicted {
+    type: sum
+    sql: ${TABLE}.agg_would_accept * 0.018 ;;
+  }
+
  }
