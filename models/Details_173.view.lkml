@@ -7,6 +7,8 @@
        drv.ncb_years,
        occ.occupation,
        cov.risk_postcode,
+       cov.consumer_name,
+       cov.originator_name,
        veh.vehicle_make,
        veh.vehicle_model,
        veh.vehicle_value_amount,
@@ -39,6 +41,8 @@ GROUP BY drv.forename,
          drv.ncb_years,
          occ.occupation,
          cov.risk_postcode,
+         cov.originator_name,
+        cov.consumer_name,
          veh.vehicle_make,
          veh.vehicle_model,
          veh.vehicle_value_amount,
@@ -151,6 +155,11 @@ GROUP BY drv.forename,
     description: "indicator of sale on quote"
     type: number
     sql: ${TABLE}.sale_flag ;;
+  }
+
+  dimension: originator_name {
+    type: string
+    sql: CASE WHEN ${TABLE}.originator_name != ' ' THEN ${TABLE}.originator_name ELSE ${TABLE}.consumer_name END ;;
   }
 }
 #   measure: total_lifetime_orders {
