@@ -29,7 +29,7 @@ FROM qs_drivers drv
   LEFT JOIN qs_mi_outputs mi ON drv.quote_id = mi.quote_id
   LEFT JOIN qs_vehicles veh ON drv.quote_id = veh.quote_id
   LEFT JOIN qs_cover cov ON drv.quote_id = cov.quote_id
-  LEFT JOIN abi_occupation occ ON drv.main_occupation = occ.abi_code
+  LEFT JOIN abi_occupation occ ON drv.main_occupation = lpad(occ.abi_code,3,'0')
   LEFT JOIN hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36)
 WHERE drv.driver_id = '0'
 AND   rct_mi_13 = '173'
