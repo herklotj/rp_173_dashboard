@@ -3,6 +3,7 @@
    derived_table: {
      sql:SELECT cov.quote_id,
        to_date(cov.quote_dttm) AS quote_date,
+      cov.quote_dttm,
        CASE
          WHEN timestampdiff (YEAR,drv.birth_dt,cov.cover_start_dt) < 25 AND timestampdiff (YEAR,drv.birth_dt,cov.cover_start_dt) > 20 AND drv.ncb_years > 0 THEN 'Acceptable'
          ELSE 'Invalid'
@@ -199,7 +200,7 @@ FROM (SELECT *
    dimension_group: quote_date {
      type: time
      timeframes: [date, week, month, year]
-     sql: ${TABLE}.quote_date ;;
+     sql: ${TABLE}.quote_dttm ;;
    }
   dimension: risk_attitude {
     type: string
