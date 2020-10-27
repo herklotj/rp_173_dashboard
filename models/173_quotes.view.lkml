@@ -192,7 +192,10 @@ FROM (SELECT *
     type: number
     sql: ${TABLE}.quotedpremium_in_notinclipt ;;
   }
-
+  dimension: quoted_date {
+    type: date
+    sql: ${TABLE}.quote_date ;;
+  }
    dimension_group: quote_date {
      type: time
      timeframes: [date, week, month, year]
