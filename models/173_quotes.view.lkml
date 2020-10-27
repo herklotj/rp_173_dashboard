@@ -9,6 +9,7 @@
        END AS AGE_NCD_Acceptable,
        cov.consumer_name,
        cov.originator_name,
+       cov.rct_noquote_an as quotes,
        CASE
          WHEN rad.rct_br047_strategic = 1 AND cov.radar_no_bus_rules_failed = 1 THEN 1
          ELSE 0
@@ -136,6 +137,10 @@ FROM (SELECT *
   dimension: agg_would_accept {
     type: number
     sql: ${TABLE}.agg_would_accept ;;
+  }
+  dimension: acceptable_quotes {
+      type: number
+      sql: ${TABLE}.quotes ;;
   }
   dimension: no_business_rules_failed{
     type: number
