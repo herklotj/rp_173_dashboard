@@ -9,6 +9,7 @@
        cov.risk_postcode,
        cov.consumer_name,
        cov.originator_name,
+       cov.cover_start_dt,
        veh.vehicle_make,
        veh.vehicle_model,
        veh.vehicle_value_amount,
@@ -26,15 +27,15 @@
        AVG(quotedpremium_ap_notinclipt) AS avg_quoted_premium,
        MIN(drv.quote_dttm) AS quote_dttm
 FROM qs_drivers drv
-  LEFT JOIN qs_mi_outputs mi ON drv.quote_id = mi.quote_id
-  LEFT JOIN qs_vehicles veh ON drv.quote_id = veh.quote_id
-  LEFT JOIN qs_cover cov ON drv.quote_id = cov.quote_id
-  LEFT JOIN abi_occupation occ ON drv.main_occupation = lpad(occ.abi_code,3,'0')
-  LEFT JOIN hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36)
-WHERE drv.driver_id = '0'
-AND   rct_mi_13 = '173'
-AND   cov.rct_noquote_an = 0
-AND   drv.quote_dttm > '2019-11-28'
+  INNER JOIN  qs_mi_outputs mi ON drv.quote_id = mi.quote_id
+        AND   drv.driver_id = '0'
+        AND   rct_mi_13 = '173'
+        AND   drv.quote_dttm > '2019-11-28'
+  INNER JOIN  qs_vehicles veh ON drv.quote_id = veh.quote_id
+  INNER JOIN  qs_cover cov ON drv.quote_id = cov.quote_id
+        AND   cov.rct_noquote_an = 0
+  INNER JOIN  abi_occupation occ ON drv.main_occupation = lpad(occ.abi_code,3,'0')
+  LEFT JOIN   hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36)
 GROUP BY drv.forename,
          drv.surname,
          drv.birth_dt,
@@ -43,6 +44,7 @@ GROUP BY drv.forename,
          cov.risk_postcode,
          cov.originator_name,
         cov.consumer_name,
+        cov.cover_start_dt,
          veh.vehicle_make,
          veh.vehicle_model,
          veh.vehicle_value_amount,
@@ -79,6 +81,12 @@ GROUP BY drv.forename,
    timeframes: [date, week, month, year]
    sql: ${TABLE}.birth_dt ;;
  }
+  dimension_group: cover_start_date {
+    description: "Cover Start Date"
+    type: time
+    timeframes: [date, week, month, year]
+    sql: ${TABLE}.cover_start_dt ;;
+  }
   dimension_group: quote {
     description: "Quote date"
     type: time
@@ -150,6 +158,7 @@ GROUP BY drv.forename,
     description: "Average quoted premium"
     type: number
     sql: ${TABLE}.avg_quoted_premium ;;
+    value_format_name: gbp
   }
   dimension: sale_flag {
     description: "indicator of sale on quote"

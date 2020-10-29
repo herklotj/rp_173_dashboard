@@ -3,14 +3,14 @@
    derived_table: {
      sql:SELECT cov.quote_id,
        to_date(cov.quote_dttm) AS quote_date,
-      cov.quote_dttm,
+       cov.quote_dttm,
        CASE
          WHEN timestampdiff (YEAR,drv.birth_dt,cov.cover_start_dt) < 25 AND timestampdiff (YEAR,drv.birth_dt,cov.cover_start_dt) > 20 AND drv.ncb_years > 0 THEN 'Acceptable'
          ELSE 'Invalid'
        END AS AGE_NCD_Acceptable,
        cov.consumer_name,
        cov.originator_name,
-       cov.rct_noquote_an as quotes,
+       cov.rct_noquote_an AS quotes,
        CASE
          WHEN rad.rct_br047_strategic = 1 AND cov.radar_no_bus_rules_failed = 1 THEN 1
          ELSE 0
@@ -78,23 +78,20 @@
          WHEN sal.insurer_quote_ref IS NULL THEN 0
          ELSE 1
        END AS sale_flag
-FROM (SELECT *
-      FROM qs_cover c
-        INNER JOIN qs_mi_outputs mi
-                ON c.quote_id = mi.quote_id
-               AND mi.rct_mi_13 = '173'
-               AND to_date (SYSDATE) - to_date (c.quote_dttm) <= 30) cov
-  LEFT JOIN (SELECT *
-             FROM qs_radar_return
-             WHERE to_date(SYSDATE) - to_date(quote_dttm) <= 30) rad ON cov.quote_id = rad.quote_id
-  LEFT JOIN (SELECT *
-             FROM qs_drivers
-             WHERE to_date(SYSDATE) - to_date(quote_dttm) <= 30) drv
-         ON cov.quote_id = drv.quote_id
-        AND drv.driver_id = '0'
-  LEFT JOIN (SELECT *
-             FROM qs_vehicles
-             WHERE to_date(SYSDATE) - to_date(quote_dttm) <= 30) veh ON cov.quote_id = veh.quote_id
+FROM qs_cover cov
+  INNER JOIN qs_mi_outputs mi
+          ON cov.quote_id = mi.quote_id
+         AND mi.rct_mi_13 = '173'
+         AND to_date (SYSDATE) - to_date (cov.quote_dttm) <= 30
+  INNER JOIN qs_radar_return rad
+          ON cov.quote_id = rad.quote_id
+         AND to_date (SYSDATE) - to_date (rad.quote_dttm) <= 30
+  INNER JOIN qs_drivers drv
+          ON cov.quote_id = drv.quote_id
+         AND to_date (SYSDATE) - to_date (drv.quote_dttm) <= 30
+         AND drv.driver_id = '0'
+  INNER JOIN qs_vehicles veh ON cov.quote_id = veh.quote_id
+             AND to_date(SYSDATE) - to_date(veh.quote_dttm) <= 30
   LEFT JOIN vl_vehicle_data vl ON veh.abi_code = vl.abi_code
   LEFT JOIN v_model_abi_code mod ON vl.abi_code = mod.abi_code
   LEFT JOIN postcode_geography geo ON UPPER (replace (cov.risk_postcode,' ','')) = UPPER (geo.postcode)
@@ -117,6 +114,8 @@ FROM (SELECT *
         AND UPPER (squeeze (concat (LEFT (replace (replace (replace (drv.surname,' ',''),'''',''),'-',''),5),'_',LEFT (replace (drv.forename,' ',''),1)))) = ins.ck_suffix
         AND ins.Insight_match_type <> 'No Match'
   LEFT JOIN hourly_sales sal ON cov.quote_id = LEFT (sal.insurer_quote_ref,36)
+
+
 
 
 ;;
@@ -241,6 +240,7 @@ FROM (SELECT *
   measure: av_quoted_premium {
     type: average
     sql: ${TABLE}.quotedpremium_in_notinclipt ;;
+    value_format_name: gbp
   }
   measure: av_risk_attitude {
     type: average
