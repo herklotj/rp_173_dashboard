@@ -24,7 +24,7 @@
          WHEN sal.insurer_quote_ref IS NULL THEN 0
          ELSE 1
        END AS sale_flag,
-       AVG(quotedpremium_ap_notinclipt) AS avg_quoted_premium,
+       AVG(quotedpremium_an_notinclipt) AS avg_quoted_premium,
        MIN(drv.quote_dttm) AS quote_dttm
 FROM qs_drivers drv
   INNER JOIN  qs_mi_outputs mi ON drv.quote_id = mi.quote_id

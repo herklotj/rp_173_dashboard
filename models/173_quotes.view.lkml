@@ -22,7 +22,7 @@
        cov.radar_no_bus_rules_failed,
        TIMESTAMPDIFF(YEAR,drv.birth_dt,cov.cover_start_dt) AS driver_age,
        drv.driver_id,
-       cov.quotedpremium_in_notinclipt,
+       cov.quotedpremium_an_notinclipt,
        CASE
          WHEN rct_mi_15 >= 0 AND rct_mi_15 < 0.05 THEN '0-0.05'
          WHEN rct_mi_15 >= 0.05 AND rct_mi_15 < 0.1 THEN '0.05-0.1'
