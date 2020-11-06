@@ -239,7 +239,7 @@ FROM qs_cover cov
   }
   measure: av_quoted_premium {
     type: average
-    sql: ${TABLE}.quotedpremium_in_notinclipt ;;
+    sql: ${TABLE}.quotedpremium_an_notinclipt ;;
     value_format_name: gbp
   }
   measure: av_risk_attitude {
