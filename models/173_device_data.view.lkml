@@ -114,6 +114,11 @@ view: 173_device_data  {
   }
 
 
+  measure: Days_since_posted {
+    type: number
+    sql: min(case when Live = 'Live' and ifNull(device_days,-1) =-1 then TIMESTAMPDIFF(day,date_posted,sysdate)end) ;;
+
+  }
 
 
     }
