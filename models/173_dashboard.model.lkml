@@ -16,6 +16,8 @@ explore: business_rules_performance {}
 
 explore: 173_quotes {}
 
+explore: 173_device_data {}
+
 # explore: aap_canc {}
 
 # explore: aap_claim_status {}
