@@ -3,12 +3,14 @@
    derived_table: {
      sql:SELECT cov.quote_id,
        to_date(cov.quote_dttm) AS quote_date,
+       cov.quote_dttm,
        CASE
          WHEN timestampdiff (YEAR,drv.birth_dt,cov.cover_start_dt) < 25 AND timestampdiff (YEAR,drv.birth_dt,cov.cover_start_dt) > 20 AND drv.ncb_years > 0 THEN 'Acceptable'
          ELSE 'Invalid'
        END AS AGE_NCD_Acceptable,
        cov.consumer_name,
        cov.originator_name,
+       cov.rct_noquote_an AS quotes,
        CASE
          WHEN rad.rct_br047_strategic = 1 AND cov.radar_no_bus_rules_failed = 1 THEN 1
          ELSE 0
@@ -20,7 +22,7 @@
        cov.radar_no_bus_rules_failed,
        TIMESTAMPDIFF(YEAR,drv.birth_dt,cov.cover_start_dt) AS driver_age,
        drv.driver_id,
-       cov.quotedpremium_in_notinclipt,
+       cov.quotedpremium_an_notinclipt,
        CASE
          WHEN rct_mi_15 >= 0 AND rct_mi_15 < 0.05 THEN '0-0.05'
          WHEN rct_mi_15 >= 0.05 AND rct_mi_15 < 0.1 THEN '0.05-0.1'
@@ -44,22 +46,22 @@
          WHEN rct_mi_15 >= 0.95 AND rct_mi_15 <= 1 THEN '0.95-1'
          ELSE '-1'
        END AS risk_attitude_banded,
-      CASE
-        WHEN rct_mi_16 >=0     and rct_mi_16 < 0.005 then '0-0.005'
-        WHEN rct_mi_16 >=0.005 and rct_mi_16 < 0.010 then '0.005-0.010'
-        WHEN rct_mi_16 >=0.010 and rct_mi_16 < 0.015 then '0.010-0.015'
-        WHEN rct_mi_16 >=0.015 and rct_mi_16 < 0.020 then '0.015-0.020'
-        WHEN rct_mi_16 >=0.020 and rct_mi_16 < 0.025 then '0.020-0.025'
-        WHEN rct_mi_16 >=0.025 and rct_mi_16 < 0.030 then '0.025-0.030'
-        WHEN rct_mi_16 >=0.030 and rct_mi_16 < 0.035 then '0.030-0.035'
-        WHEN rct_mi_16 >=0.035 and rct_mi_16 < 0.040 then '0.035-0.040'
-        WHEN rct_mi_16 >=0.040 and rct_mi_16 < 0.045 then '0.040-0.045'
-        WHEN rct_mi_16 >=0.045 and rct_mi_16 < 0.050 then '0.045-0.050'
-        WHEN rct_mi_16 >=0.050 and rct_mi_16 < 0.055 then '0.050-0.055'
-        WHEN rct_mi_16 >=0.050  then '0.050+'
-      END AS tp_freq_br,
-
+       CASE
+         WHEN rct_mi_16 >= 0 AND rct_mi_16 < 0.005 THEN '0-0.005'
+         WHEN rct_mi_16 >= 0.005 AND rct_mi_16 < 0.010 THEN '0.005-0.010'
+         WHEN rct_mi_16 >= 0.010 AND rct_mi_16 < 0.015 THEN '0.010-0.015'
+         WHEN rct_mi_16 >= 0.015 AND rct_mi_16 < 0.020 THEN '0.015-0.020'
+         WHEN rct_mi_16 >= 0.020 AND rct_mi_16 < 0.025 THEN '0.020-0.025'
+         WHEN rct_mi_16 >= 0.025 AND rct_mi_16 < 0.030 THEN '0.025-0.030'
+         WHEN rct_mi_16 >= 0.030 AND rct_mi_16 < 0.035 THEN '0.030-0.035'
+         WHEN rct_mi_16 >= 0.035 AND rct_mi_16 < 0.040 THEN '0.035-0.040'
+         WHEN rct_mi_16 >= 0.040 AND rct_mi_16 < 0.045 THEN '0.040-0.045'
+         WHEN rct_mi_16 >= 0.045 AND rct_mi_16 < 0.050 THEN '0.045-0.050'
+         WHEN rct_mi_16 >= 0.050 AND rct_mi_16 < 0.055 THEN '0.050-0.055'
+         WHEN rct_mi_16 >= 0.050 THEN '0.050+'
+       END AS tp_freq_br,
        rct_mi_15 AS risk_attitude,
+       rct_mi_13 AS scheme_number,
        drv.ncb_years,
        veh.vehicle_make,
        manufacturer,
@@ -68,46 +70,54 @@
        engine_size,
        geo.postcode_area,
        drv.gender,
-       case when ins.Insight_Match_type is null then 'Never Member' else ins.Insight_Match_type end as Insight_Match_type
-FROM (  select *
-
-        from
-          qs_cover c
-        INNER JOIN qs_mi_outputs mi
-        ON c.quote_id = mi.quote_id and mi.rct_mi_13 = '173'
-        and to_date(sysdate) - to_date(c.quote_dttm)  <= 30
-      )cov
-  LEFT JOIN (select * from qs_radar_return where  to_date(sysdate) - to_date(quote_dttm) <= 30) rad ON cov.quote_id = rad.quote_id
-  LEFT JOIN (select * from qs_drivers where to_date(sysdate) - to_date(quote_dttm) <= 30) drv
-         ON cov.quote_id = drv.quote_id
-        AND drv.driver_id = '0'
-  LEFT JOIN (select * from qs_vehicles where  to_date(sysdate) - to_date(quote_dttm) <= 30) veh ON cov.quote_id = veh.quote_id
+       CASE
+         WHEN ins.Insight_Match_type IS NULL THEN 'Never Member'
+         ELSE ins.Insight_Match_type
+       END AS Insight_Match_type,
+       CASE
+         WHEN sal.insurer_quote_ref IS NULL THEN 0
+         ELSE 1
+       END AS sale_flag
+FROM qs_cover cov
+  INNER JOIN qs_mi_outputs mi
+          ON cov.quote_id = mi.quote_id
+         AND mi.rct_mi_13 = '173'
+         AND to_date (SYSDATE) - to_date (cov.quote_dttm) <= 30
+  INNER JOIN qs_radar_return rad
+          ON cov.quote_id = rad.quote_id
+         AND to_date (SYSDATE) - to_date (rad.quote_dttm) <= 30
+  INNER JOIN qs_drivers drv
+          ON cov.quote_id = drv.quote_id
+         AND to_date (SYSDATE) - to_date (drv.quote_dttm) <= 30
+         AND drv.driver_id = '0'
+  INNER JOIN qs_vehicles veh ON cov.quote_id = veh.quote_id
+             AND to_date(SYSDATE) - to_date(veh.quote_dttm) <= 30
   LEFT JOIN vl_vehicle_data vl ON veh.abi_code = vl.abi_code
   LEFT JOIN v_model_abi_code mod ON vl.abi_code = mod.abi_code
-  LEFT JOIN postcode_geography geo ON UPPER(replace(cov.risk_postcode, ' ','')) = UPPER(geo.postcode)
+  LEFT JOIN postcode_geography geo ON UPPER (replace (cov.risk_postcode,' ','')) = UPPER (geo.postcode)
+  LEFT JOIN (SELECT *,
+                    CASE
+                      WHEN live_member = 'Y' AND aa_score_22sep2015 < 1.1 THEN 'Member'
+                      WHEN live_member = 'N' AND aa_score_22sep2015 < 1.1 AND aa_score_22sep2015 > 0 AND tenure_current > 0 THEN 'Ex-Member'
+                      WHEN Live_member = 'N' AND (HOME_HISTORY = 'C' OR HOME_HISTORY = 'X') /*and aa_score_22sep2015 < 1.1*/  THEN 'Home'
+                      ELSE 'Unacceptable'
+                    END AS acceptance,
+                    CASE
+                      WHEN live_member = 'Y' THEN 'Member'
+                      WHEN live_member = 'N' AND aa_score_22sep2015 > 0 AND tenure_current > 0 THEN 'Ex-Member'
+                      WHEN Live_member = 'N' AND (HOME_HISTORY = 'C' OR HOME_HISTORY = 'X') THEN 'Home'
+                      ELSE 'No Match'
+                    END AS Insight_Match_type,
+                    1 AS current_match
+             FROM insight) ins
+         ON LEFT (ins.qas_premise_id,8) = cov.qqas1_address_key1
+        AND UPPER (squeeze (concat (LEFT (replace (replace (replace (drv.surname,' ',''),'''',''),'-',''),5),'_',LEFT (replace (drv.forename,' ',''),1)))) = ins.ck_suffix
+        AND ins.Insight_match_type <> 'No Match'
+  LEFT JOIN hourly_sales sal ON cov.quote_id = LEFT (sal.insurer_quote_ref,36)
 
-  left join
-    (select
-      *
-      ,case when live_member = 'Y' and aa_score_22sep2015 < 1.1 then 'Member'
-              when live_member = 'N' and aa_score_22sep2015 < 1.1 and aa_score_22sep2015 > 0 and tenure_current > 0 then 'Ex-Member'
-              when Live_member = 'N'
-                   and (HOME_HISTORY = 'C' or HOME_HISTORY = 'X')
-                   /*and aa_score_22sep2015 < 1.1*/ then 'Home'
-              else 'Unacceptable' end as acceptance
-      ,case when live_member = 'Y' then 'Member'
-              when live_member = 'N' and aa_score_22sep2015 > 0 and tenure_current > 0 then 'Ex-Member'
-              when Live_member = 'N'
-                   and (HOME_HISTORY = 'C' or HOME_HISTORY = 'X')
-                   then 'Home'
-              else 'No Match' end as Insight_Match_type
-      ,1 as current_match
-     from
-        insight
-     )ins
-    on  left(ins.qas_premise_id,8) = cov.qqas1_address_key1
-    and upper(squeeze(concat(left(replace(replace(replace(drv.surname,' ',''),'''',''),'-',''),5),'_',left(replace(drv.forename,' ',''),1)))) = ins.ck_suffix
-    and ins.Insight_match_type <> 'No Match'
+
+
+
 ;;
    }
 
@@ -122,11 +132,15 @@ FROM (  select *
   }
   dimension: originator_name {
     type: string
-    sql: ${TABLE}.originator_name ;;
+    sql: CASE WHEN ${TABLE}.originator_name != ' ' THEN ${TABLE}.originator_name ELSE ${TABLE}.consumer_name END ;;
   }
   dimension: agg_would_accept {
     type: number
     sql: ${TABLE}.agg_would_accept ;;
+  }
+  dimension: acceptable_quotes {
+      type: number
+      sql: ${TABLE}.quotes ;;
   }
   dimension: no_business_rules_failed{
     type: number
@@ -178,11 +192,14 @@ FROM (  select *
     type: number
     sql: ${TABLE}.quotedpremium_in_notinclipt ;;
   }
-
+  dimension: quoted_date {
+    type: date
+    sql: ${TABLE}.quote_date ;;
+  }
    dimension_group: quote_date {
      type: time
      timeframes: [date, week, month, year]
-     sql: ${TABLE}.quote_date ;;
+     sql: ${TABLE}.quote_dttm ;;
    }
   dimension: risk_attitude {
     type: string
@@ -202,6 +219,16 @@ FROM (  select *
     sql: Insight_Match_type;;
   }
 
+  dimension: sale_flag {
+    type: number
+    sql: ${TABLE}.sale_flag;;
+  }
+
+  dimension: scheme_number {
+    type: string
+    sql: ${TABLE}.scheme_number ;;
+  }
+
    measure: quotes {
      type: count_distinct
      sql: ${TABLE}.quote_id ;;
@@ -212,7 +239,8 @@ FROM (  select *
   }
   measure: av_quoted_premium {
     type: average
-    sql: ${TABLE}.quotedpremium_in_notinclipt ;;
+    sql: ${TABLE}.quotedpremium_an_notinclipt ;;
+    value_format_name: gbp
   }
   measure: av_risk_attitude {
     type: average
@@ -222,6 +250,17 @@ FROM (  select *
   measure: sales_predicted {
     type: sum
     sql: ${TABLE}.agg_would_accept * 0.018 ;;
+  }
+
+  measure: sales {
+    type:  sum
+    sql: ${TABLE}.sale_flag ;;
+  }
+
+  measure: conversion {
+    type:  number
+  sql: 1.0*(SUM(${TABLE}.sale_flag))/(COUNT(DISTINCT ${TABLE}.quote_id));;
+    value_format_name: percent_2
   }
 
  }
