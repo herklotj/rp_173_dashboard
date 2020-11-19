@@ -19,14 +19,55 @@
        drv.no_claims,
        drv.no_convictions,
        drv.no_oth_vehicles_driven,
+       drv.gender,
+       TIMESTAMPDIFF(YEAR,drv.birth_dt,cov.cover_start_dt) AS driver_age,
        mi.rct_mi_15 AS risk_attitude,
+       quotedpremium_an_notinclipt AS avg_quoted_premium,
+       drv.quote_dttm AS quote_dttm,
        CASE
          WHEN sal.insurer_quote_ref IS NULL THEN 0
          ELSE 1
        END AS sale_flag,
-       AVG(quotedpremium_an_notinclipt) AS avg_quoted_premium,
-       MIN(drv.quote_dttm) AS quote_dttm
+              CASE
+         WHEN rct_mi_15 >= 0 AND rct_mi_15 < 0.05 THEN '0-0.05'
+         WHEN rct_mi_15 >= 0.05 AND rct_mi_15 < 0.1 THEN '0.05-0.1'
+         WHEN rct_mi_15 >= 0.1 AND rct_mi_15 < 0.15 THEN '0.1-0.15'
+         WHEN rct_mi_15 >= 0.15 AND rct_mi_15 < 0.2 THEN '0.15-0.2'
+         WHEN rct_mi_15 >= 0.2 AND rct_mi_15 < 0.25 THEN '0.2-0.25'
+         WHEN rct_mi_15 >= 0.25 AND rct_mi_15 < 0.3 THEN '0.25-0.3'
+         WHEN rct_mi_15 >= 0.3 AND rct_mi_15 < 0.35 THEN '0.3-0.35'
+         WHEN rct_mi_15 >= 0.35 AND rct_mi_15 < 0.4 THEN '0.35-0.4'
+         WHEN rct_mi_15 >= 0.4 AND rct_mi_15 < 0.45 THEN '0.4-0.45'
+         WHEN rct_mi_15 >= 0.45 AND rct_mi_15 < 0.5 THEN '0.45-0.5'
+         WHEN rct_mi_15 >= 0.5 AND rct_mi_15 < 0.55 THEN '0.5-0.55'
+         WHEN rct_mi_15 >= 0.55 AND rct_mi_15 < 0.6 THEN '0.55-0.6'
+         WHEN rct_mi_15 >= 0.6 AND rct_mi_15 < 0.65 THEN '0.6-0.65'
+         WHEN rct_mi_15 >= 0.65 AND rct_mi_15 < 0.7 THEN '0.65-0.7'
+         WHEN rct_mi_15 >= 0.7 AND rct_mi_15 < 0.75 THEN '0.7-0.75'
+         WHEN rct_mi_15 >= 0.75 AND rct_mi_15 < 0.8 THEN '0.75-0.8'
+         WHEN rct_mi_15 >= 0.8 AND rct_mi_15 < 0.85 THEN '0.8-0.85'
+         WHEN rct_mi_15 >= 0.85 AND rct_mi_15 < 0.9 THEN '0.85-0.9'
+         WHEN rct_mi_15 >= 0.9 AND rct_mi_15 < 0.95 THEN '0.9-0.95'
+         WHEN rct_mi_15 >= 0.95 AND rct_mi_15 <= 1 THEN '0.95-1'
+         ELSE '-1'
+       END AS risk_attitude_banded,
+       CASE
+         WHEN rct_mi_16 >= 0 AND rct_mi_16 < 0.005 THEN '0-0.005'
+         WHEN rct_mi_16 >= 0.005 AND rct_mi_16 < 0.010 THEN '0.005-0.010'
+         WHEN rct_mi_16 >= 0.010 AND rct_mi_16 < 0.015 THEN '0.010-0.015'
+         WHEN rct_mi_16 >= 0.015 AND rct_mi_16 < 0.020 THEN '0.015-0.020'
+         WHEN rct_mi_16 >= 0.020 AND rct_mi_16 < 0.025 THEN '0.020-0.025'
+         WHEN rct_mi_16 >= 0.025 AND rct_mi_16 < 0.030 THEN '0.025-0.030'
+         WHEN rct_mi_16 >= 0.030 AND rct_mi_16 < 0.035 THEN '0.030-0.035'
+         WHEN rct_mi_16 >= 0.035 AND rct_mi_16 < 0.040 THEN '0.035-0.040'
+         WHEN rct_mi_16 >= 0.040 AND rct_mi_16 < 0.045 THEN '0.040-0.045'
+         WHEN rct_mi_16 >= 0.045 AND rct_mi_16 < 0.050 THEN '0.045-0.050'
+         WHEN rct_mi_16 >= 0.050 AND rct_mi_16 < 0.055 THEN '0.050-0.055'
+         WHEN rct_mi_16 >= 0.050 THEN '0.050+'
+       END AS tp_freq_br,
+       rct_mi_15 AS risk_attitude
 FROM qs_drivers drv
+  INNER JOIN  hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36) AND drv.driver_id = 0
   INNER JOIN  qs_mi_outputs mi ON drv.quote_id = mi.quote_id
         AND   drv.driver_id = '0'
         AND   rct_mi_13 = '173'
@@ -35,30 +76,6 @@ FROM qs_drivers drv
   INNER JOIN  qs_cover cov ON drv.quote_id = cov.quote_id
         AND   cov.rct_noquote_an = 0
   INNER JOIN  abi_occupation occ ON drv.main_occupation = lpad(occ.abi_code,3,'0')
-  LEFT JOIN   hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36)
-GROUP BY drv.forename,
-         drv.surname,
-         drv.birth_dt,
-         drv.ncb_years,
-         occ.occupation,
-         cov.risk_postcode,
-         cov.originator_name,
-        cov.consumer_name,
-        cov.cover_start_dt,
-         veh.vehicle_make,
-         veh.vehicle_model,
-         veh.vehicle_value_amount,
-         veh.annual_mileage,
-         veh.registration_number,
-         veh.purchase_dt,
-         drv.no_claims,
-         drv.no_convictions,
-         drv.no_oth_vehicles_driven,
-         mi.rct_mi_15,
-         CASE
-           WHEN sal.insurer_quote_ref IS NULL THEN 0
-           ELSE 1
-         END
 
 ;;
    }
@@ -151,25 +168,52 @@ GROUP BY drv.forename,
   }
   dimension: risk_attitude {
     description: "Risk attitude factor"
-    type: number
-    sql: ${TABLE}.risk_attitude ;;
+    type: string
+    sql: ${TABLE}.risk_attitude_banded ;;
   }
-  dimension: av_quoted_premium {
-    description: "Average quoted premium"
-    type: number
-    sql: ${TABLE}.avg_quoted_premium ;;
-    value_format_name: gbp
-  }
+
   dimension: sale_flag {
     description: "indicator of sale on quote"
     type: number
     sql: ${TABLE}.sale_flag ;;
   }
 
+  dimension: driver_gender {
+    type: string
+    sql: gender ;;
+  }
+
   dimension: originator_name {
     type: string
     sql: CASE WHEN ${TABLE}.originator_name != ' ' THEN ${TABLE}.originator_name ELSE ${TABLE}.consumer_name END ;;
   }
+
+  dimension: driver_age {
+    type: number
+    sql: ${TABLE}.driver_age ;;
+  }
+
+
+  dimension: tp_freq_br {
+    type: string
+    sql: ${TABLE}.tp_freq_br;;
+    }
+
+
+  measure: av_quoted_premium {
+    description: "Average quoted premium"
+    type: average
+    sql: ${TABLE}.avg_quoted_premium ;;
+    value_format_name: gbp
+  }
+
+  measure: sales {
+    type:  sum
+    sql: ${TABLE}.sale_flag ;;
+  }
+
+
+
 }
 #   measure: total_lifetime_orders {
 #     description: "Use this for counting lifetime orders across many users"
