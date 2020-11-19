@@ -4,8 +4,7 @@ view: 173_device_data  {
      sql:
       select
           *
-          ,(can_km_driven/1.6) / device_days as can_avg_miles_per_day
-          ,(gps_km_driven/1.6) / device_days as can_avg_miles_per_day
+
           ,annual_mileage / 365.25 as declared_avg_miles_per_day
           ,case when cancellation_date >= inception_date then 'Cancelled'
                 when inception_date <= to_date(sysdate)  then 'Live'
@@ -33,7 +32,7 @@ view: 173_device_data  {
               mb_membership_no
               ,min(start_time) as first_journey
               ,max(start_time) as most_recent_journey
-              ,TIMESTAMPDIFF(day,min(start_time),max(start_time)) +2 as device_days
+              ,TIMESTAMPDIFF(day,min(to_date(start_time)),to_date(sysdate)) as device_days
               ,sum(can_distance)/1000 as can_km_driven
               ,sum(gps_distance)/1000 as gps_km_driven
               ,max(odometer)/1000 as car_odo_km
@@ -44,6 +43,7 @@ view: 173_device_data  {
               ,sum(overspeed_count) as overspeeds
               ,sum(brake_count) as brakes
               ,sum(max_rpm_count) as max_rpms
+              ,count(*) as journeys
 
             from
               si_journey_summary
@@ -120,5 +120,59 @@ view: 173_device_data  {
 
   }
 
+  measure: Total_Miles_Driven_Can {
+    type: number
+    sql:sum( ${TABLE}.can_km_driven/1.6 )    ;;
+    value_format_name: decimal_0
+  }
+
+  measure: Max_MPH_Can {
+    type: number
+    sql:max( ${TABLE}.can_max_speed/1.6 );;
+    value_format_name: decimal_0
+  }
+
+  measure: Avg_miles_per_day_can  {
+    type: number
+    sql: sum(can_km_driven/1.6) / sum(device_days) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: Avg_miles_per_day_declared  {
+    type: number
+    sql: sum(annual_mileage / 365.25)/count(*);;
+    value_format_name: decimal_0
+  }
+
+  measure: Actual_vs_Declared_miles {
+    type: number
+    sql: ${Avg_miles_per_day_can}/${Avg_miles_per_day_declared}-1 ;;
+    value_format_name: percent_0
+
+  }
+
+  measure: Journeys_Count {
+    type: number
+    sql: sum(${TABLE}.journeys) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: Harsh_accs_Count {
+    type: number
+    sql: sum(${TABLE}.harsh_accs) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: Harsh_decs_Count {
+    type: number
+    sql: sum(${TABLE}.harsh_decs) ;;
+    value_format_name: decimal_0
+  }
+
+  measure: Overspeeds_Count {
+    type: number
+    sql: sum(${TABLE}.overspeeds) ;;
+    value_format_name: decimal_0
+  }
 
     }
