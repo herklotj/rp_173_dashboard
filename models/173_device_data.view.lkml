@@ -110,7 +110,7 @@ view: 173_device_data  {
 
   measure: Device_Installed {
     type: number
-    sql: Max(case when Live = 'Live' and device_days > 0 then 1 when Live = 'Live' and ifNull(device_days,-1) =-1 then 0 end) ;;
+    sql: sum(case when Live = 'Live' and device_days > 0 then 1 when Live = 'Live' and ifNull(device_days,-1) =-1 then 0 end) ;;
   }
 
 
