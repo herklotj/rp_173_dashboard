@@ -11,6 +11,7 @@
        cov.consumer_name,
        cov.originator_name,
        cov.rct_noquote_an AS quotes,
+       case when cov.rct_noquote_an = 0 then 1 else 0 end as AAUICL_Quoted,
        CASE
          WHEN rad.rct_br047_strategic = 1 AND cov.radar_no_bus_rules_failed = 1 THEN 1
          ELSE 0
@@ -233,6 +234,12 @@ FROM qs_cover cov
      type: count_distinct
      sql: ${TABLE}.quote_id ;;
    }
+
+   measure: AAUICL_Quoted {
+     type: sum
+    sql: ${TABLE}.AAUICL_Quoted ;;
+   }
+
   measure: agg_acc_quotes {
     type: sum
     sql: ${TABLE}.agg_would_accept ;;
@@ -262,5 +269,12 @@ FROM qs_cover cov
   sql: 1.0*(SUM(${TABLE}.sale_flag))/(COUNT(DISTINCT ${TABLE}.quote_id));;
     value_format_name: percent_2
   }
+
+  measure: conversion_on_quoted {
+    type:  number
+    sql: 1.0*(SUM(${TABLE}.sale_flag))/nullif(${AAUICL_Quoted},0);;
+    value_format_name: percent_2
+  }
+
 
  }
