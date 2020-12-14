@@ -197,11 +197,20 @@ FROM qs_cover cov
     type: date
     sql: ${TABLE}.quote_date ;;
   }
-   dimension_group: quote_date {
-     type: time
-     timeframes: [date, week, month, year]
-     sql: ${TABLE}.quote_dttm ;;
-   }
+
+  dimension_group: quote {
+    type: time
+    timeframes: [
+      raw,
+      time,
+      hour_of_day,
+      date,
+      week,
+      month
+    ]
+    sql: ${TABLE}.quote_dttm ;;
+  }
+
   dimension: risk_attitude {
     type: string
     sql: ${TABLE}.risk_attitude_banded;;}
