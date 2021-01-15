@@ -16,6 +16,7 @@
        veh.annual_mileage,
        veh.registration_number,
        veh.purchase_dt,
+       vl.power_bhp,
        drv.no_claims,
        drv.no_convictions,
        drv.no_oth_vehicles_driven,
@@ -76,6 +77,7 @@ FROM qs_drivers drv
   INNER JOIN  qs_cover cov ON drv.quote_id = cov.quote_id
         AND   cov.rct_noquote_an = 0
   INNER JOIN  abi_occupation occ ON drv.main_occupation = lpad(occ.abi_code,3,'0')
+  INNER JOIN  vl_vehicle_data vl ON veh.abi_code = vl.abi_code
 
 ;;
    }
@@ -109,6 +111,12 @@ FROM qs_drivers drv
     type: time
     timeframes: [date, week, month, year]
     sql: ${TABLE}.quote_dttm ;;
+  }
+  dimension: power_bhp {
+    type: tier
+    style: interval
+    tiers: [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200]
+    sql: ${TABLE}.power_bhp ;;
   }
   dimension: ncd {
     description: "PH's NCD"
