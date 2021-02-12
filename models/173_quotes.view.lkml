@@ -114,7 +114,7 @@ FROM qs_cover cov
          ON LEFT (ins.qas_premise_id,8) = cov.qqas1_address_key1
         AND UPPER (squeeze (concat (LEFT (replace (replace (replace (drv.surname,' ',''),'''',''),'-',''),5),'_',LEFT (replace (drv.forename,' ',''),1)))) = ins.ck_suffix
         AND ins.Insight_match_type <> 'No Match'
-  LEFT JOIN hourly_sales sal ON cov.quote_id = LEFT (sal.insurer_quote_ref,36)
+  LEFT JOIN hourly_sales sal ON lower(cov.quote_id) = lower(LEFT (sal.insurer_quote_ref,36))
 
 
 

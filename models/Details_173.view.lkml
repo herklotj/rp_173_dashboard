@@ -68,7 +68,7 @@
        END AS tp_freq_br,
        rct_mi_15 AS risk_attitude
 FROM qs_drivers drv
-  INNER JOIN  hourly_sales sal ON drv.quote_id = LEFT (sal.insurer_quote_ref,36) AND drv.driver_id = 0
+  INNER JOIN  hourly_sales sal ON lower(drv.quote_id) = lower(LEFT (sal.insurer_quote_ref,36)) AND drv.driver_id = 0
   INNER JOIN  qs_mi_outputs mi ON drv.quote_id = mi.quote_id
         AND   drv.driver_id = '0'
         AND   rct_mi_13 = '173'
