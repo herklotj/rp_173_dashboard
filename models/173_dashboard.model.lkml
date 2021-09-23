@@ -18,6 +18,8 @@ explore: 173_quotes {}
 
 explore: 173_device_data {}
 
+explore: 173_renweals_discount {}
+
 # explore: aap_canc {}
 
 # explore: aap_claim_status {}
