@@ -115,7 +115,7 @@ AND (CASE WHEN Avg_miles_per_day <= declared_avg_miles_per_day then 'DISCOUNT' E
 
   dimension: renewal_date {
     type: date
-    sql: ${TABLE}.term_inception_date ;;
+    sql: ${TABLE}.renewal_date ;;
   }
 
   dimension: membership_no {
