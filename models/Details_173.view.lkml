@@ -68,14 +68,13 @@
        END AS tp_freq_br,
        rct_mi_15 AS risk_attitude
 FROM qs_drivers drv
-  INNER JOIN  hourly_sales sal ON lower(drv.quote_id) = lower(LEFT (sal.insurer_quote_ref,36)) AND drv.driver_id = 0
+  INNER JOIN  hourly_sales sal ON lower(drv.quote_id) = lower(LEFT (sal.insurer_quote_ref,36)) AND drv.driver_id = 0 AND drv.quote_dttm > '2022-06-01'
   INNER JOIN  qs_mi_outputs mi ON drv.quote_id = mi.quote_id
         AND   drv.driver_id = '0'
-        AND   rct_mi_13 = '173'
-        AND   drv.quote_dttm > '2019-11-28'
+        AND   drv.quote_dttm > '2022-06-01'
   INNER JOIN  qs_vehicles veh ON drv.quote_id = veh.quote_id
   INNER JOIN  qs_cover cov ON drv.quote_id = cov.quote_id
-        AND   cov.rct_noquote_an = 0
+        AND   cov.rct_noquote_an = 0 AND marginpricetest_indicator_desc = '37: Smart Mar16'
   INNER JOIN  abi_occupation occ ON drv.main_occupation = lpad(occ.abi_code,3,'0')
   INNER JOIN  vl_vehicle_data vl ON veh.abi_code = vl.abi_code
 

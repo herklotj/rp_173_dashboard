@@ -82,7 +82,7 @@
 FROM qs_cover cov
   INNER JOIN qs_mi_outputs mi
           ON cov.quote_id = mi.quote_id
-         AND mi.rct_mi_13 = '173'
+         AND marginpricetest_indicator_desc = '37: Smart Mar16' AND to_date(cov.quote_dttm) >= '2022-06-01'
          AND to_date (SYSDATE) - to_date (cov.quote_dttm) <= 30
   INNER JOIN qs_radar_return rad
           ON cov.quote_id = rad.quote_id
